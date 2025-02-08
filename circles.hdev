@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hdevelop file_version="1.2" halcon_version="18.11.0.1">
+<procedure name="main">
+<interface/>
+<body>
+<c>* 图像中的边缘被分割成线和圆</c>
+<c>* 对于作为圆的一部分的边，估计圆参数并显示生成的圆</c>
+<l>read_image (Image, 'double_circle')</l>
+<c></c>
+<c>* 初始化窗口</c>
+<l>dev_close_window ()</l>
+<l>get_image_size (Image, Width, Height)</l>
+<l>dev_open_window (0, 0, Width, Height, 'black', WindowHandle)</l>
+<c></c>
+<c>* 对图像进行快速阈值处理得到区域'Region'，</c>
+<c>* 获取其边界'RegionBorder'，</c>
+<c>* 对边界进行裁剪得到'RegionClipped'，</c>
+<c>* 对其进行圆形膨胀得到'RegionDilation'，</c>
+<c>* 然后从原始图像中提取出该区域对应的子图像'ImageReduced'</c>
+<l>fast_threshold (Image, Region, 0, 120, 7)</l>
+<l>boundary (Region, RegionBorder, 'inner')</l>
+<l>clip_region_rel (RegionBorder, RegionClipped, 5, 5, 5, 5)</l>
+<l>dilation_circle (RegionClipped, RegionDilation, 2.5)</l>
+<c></c>
+<c>* 减少图像的运算面积，加速 edges_sub_pix 算子</c>
+<l>reduce_domain (Image, RegionDilation, ImageReduced)</l>
+<c></c>
+<c>* 在子图像中提取亚像素精度的边缘'Edges'，</c>
+<c>* 将边缘分割为直线和圆弧组成的轮廓'ContoursSplit'，</c>
+<c>* 计算轮廓的数量存储在'Number'中</c>
+<l>edges_sub_pix (ImageReduced, Edges, 'canny', 2, 20, 60)</l>
+<l>segment_contours_xld (Edges, ContoursSplit, 'lines_circles', 5, 4, 3)</l>
+<l>count_obj (ContoursSplit, Number)</l>
+<c></c>
+<l>dev_display (Image)</l>
+<l>dev_set_draw ('margin')</l>
+<l>dev_set_color ('red')</l>
+<l>dev_set_line_width (3)</l>
+<l>dev_update_window ('off')</l>
+<l>for I := 1 to Number by 1</l>
+<l>    select_obj (ContoursSplit, ObjectSelected, I)</l>
+<l>    get_contour_global_attrib_xld (ObjectSelected, 'cont_approx', Attrib)</l>
+<c>    * 区分圆弧和直线，将圆弧拟合成圆，仅显示大圆</c>
+<l>    if (Attrib &gt; 0)</l>
+<l>        fit_circle_contour_xld (ObjectSelected, 'ahuber', -1, 2, 0, 3, 2, Row, Column, Radius, StartPhi, EndPhi, PointOrder)</l>
+<l>        if (Radius &gt; 100)</l>
+<l>            gen_circle_contour_xld (ContCircle, Row, Column, Radius, 0, rad(360), 'positive', 1.0)</l>
+<l>            dev_display (ContCircle)</l>
+<l>        endif</l>
+<l>    endif</l>
+<l>endfor</l>
+</body>
+<docu id="main">
+<parameters/>
+</docu>
+</procedure>
+</hdevelop>

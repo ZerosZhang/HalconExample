@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hdevelop file_version="1.2" halcon_version="18.11.0.1">
+<procedure name="main">
+<interface/>
+<body>
+<c>* 总结：使用二维像素分类分割图像</c>
+<c></c>
+<c>* 该值设置为1时，会展示交互模式，允许用户在窗口中手动绘制ROI</c>
+<l>Interactive := 0</l>
+<c></c>
+<c>* 读取图像</c>
+<l>read_image (Image, 'ic')</l>
+<c></c>
+<c>* 初始化窗口</c>
+<l>dev_close_window ()</l>
+<l>get_image_size (Image, Width, Height)</l>
+<l>dev_open_window (0, 0, Width, Height, 'white', WindowID)</l>
+<c></c>
+<c>* 将一张3通道图像转换为3张单通道图像</c>
+<l>decompose3 (Image, Red, Green, Blue)</l>
+<l>dev_display (Red)</l>
+<l>dev_set_color ('red')</l>
+<c></c>
+<c>* 交互模式下允许用户在窗口中手动绘制ROI</c>
+<l>if (Interactive)</l>
+<l>    draw_region (Pattern, WindowID)</l>
+<l>else</l>
+<l>    gen_rectangle1 (Pattern, 362, 276, 371, 298)</l>
+<l>endif</l>
+<c></c>
+<c>* 计算区域Pattern内Red和Blue通道组合的二维直方图，并将结果存储在Histo2Dim中</c>
+<l>histo_2dim (Pattern, Red, Blue, Histo2Dim)</l>
+<l>threshold (Histo2Dim, Features, 1, 255)</l>
+<c></c>
+<c>* 使用圆形结构元素对特征区域Features进行闭运算，得到FeaturesClosed</c>
+<l>closing_circle (Features, FeaturesClosed, 11.5)</l>
+<l>dev_set_draw ('fill')</l>
+<l>dev_set_part (0, 0, 511, 511)</l>
+<l>dev_display (Red)</l>
+<c>* 基于Red和Blue通道以及特征区域FeaturesClosed进行二维像素分类，结果存储在RegionClass2Dim中</c>
+<l>class_2dim_sup (Red, Blue, FeaturesClosed, RegionClass2Dim)</l>
+</body>
+<docu id="main">
+<parameters/>
+</docu>
+</procedure>
+</hdevelop>
