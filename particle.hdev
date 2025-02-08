@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hdevelop file_version="1.2" halcon_version="18.11.0.1">
+<procedure name="main">
+<interface/>
+<body>
+<c>* 小型例子的测量</c>
+<c></c>
+<c>* 初始化窗口</c>
+<l>dev_update_off ()</l>
+<l>dev_close_window ()</l>
+<l>dev_open_window (0, 0, 512, 512, 'black', WindowID)</l>
+<l>set_display_font (WindowID, 14, 'mono', 'true', 'false')</l>
+<c></c>
+<c>* 读取图片</c>
+<l>read_image (Image, 'particle')</l>
+<l>dev_display (Image)</l>
+<l>dev_disp_text ('Original image', 'window', 12, 12, 'black', [], [])</l>
+<l>dev_disp_text ('Press Run (F5) to continue', 'window', 'bottom', 'right', 'black', [], [])</l>
+<l>stop ()</l>
+<c></c>
+<c>* 二值化，并进行膨胀操作，这样就把很亮的区域提取出来了</c>
+<l>threshold (Image, Large, 110, 255)</l>
+<l>dilation_circle (Large, LargeDilation, 7.5)</l>
+<l>dev_display (Image)</l>
+<l>dev_set_draw ('margin')</l>
+<l>dev_set_line_width (3)</l>
+<l>dev_set_color ('red')</l>
+<l>dev_display (LargeDilation)</l>
+<l>dev_set_draw ('fill')</l>
+<l>dev_disp_text ('Exclude large areas from processing', 'window', 12, 12, 'black', [], [])</l>
+<l>dev_disp_text ('Press Run (F5) to continue', 'window', 'bottom', 'right', 'black', [], [])</l>
+<l>stop ()</l>
+<c></c>
+<c>* 计算大粒子区域的补集，并在其中找小粒子</c>
+<l>complement (LargeDilation, NotLarge)</l>
+<l>reduce_domain (Image, NotLarge, ParticlesRed)</l>
+<c></c>
+<c>* 进行滤波后，只能看到背景，使用局部阈值筛选出小粒子</c>
+<l>mean_image (ParticlesRed, Mean, 31, 31)</l>
+<l>dyn_threshold (ParticlesRed, Mean, SmallRaw, 3, 'light')</l>
+<l>opening_circle (SmallRaw, Small, 2.5)</l>
+<l>connection (Small, SmallConnection)</l>
+<l>dev_display (Image)</l>
+<l>dev_set_colored (12)</l>
+<l>dev_display (SmallConnection)</l>
+<l>dev_disp_text ('Extracted small particles', 'window', 12, 12, 'black', [], [])</l>
+<l>dev_disp_text ('Press Run (F5) to continue', 'window', 'bottom', 'right', 'black', [], [])</l>
+<l>stop ()</l>
+<c></c>
+<c>* 通过鼠标左键选择区域，显示对应区域的信息</c>
+<l>dev_set_color ('green')</l>
+<l>dev_display (Image)</l>
+<l>dev_set_draw ('margin')</l>
+<l>dev_display (SmallConnection)</l>
+<l>Button := 1</l>
+<l>MaxRow := 450</l>
+<l>MaxColumn := 440</l>
+<l>MinRow := 40</l>
+<l>MinColumn := 100</l>
+<l>while (Button == 1)</l>
+<l>    dev_disp_text (['使用鼠标左键选择对象，查看区域信息','点击鼠标右键退出'], 'window', 12, 12, 'black', 'box_color', '#fce9d4dd')</l>
+<l>    dev_set_color ('green')</l>
+<l>    get_mbutton (WindowID, Row, Column, Button)</l>
+<l>    dev_display (Image)</l>
+<l>    dev_display (SmallConnection)</l>
+<l>    dev_set_color ('red')</l>
+<l>    select_region_point (SmallConnection, SmallSingle, Row, Column)</l>
+<l>    dev_display (SmallSingle)</l>
+<l>    count_obj (SmallSingle, NumSingle)</l>
+<c>    * 这里的数量判断是为了避免空选</c>
+<l>    if (NumSingle == 1)</l>
+<l>        intensity (SmallSingle, Image, MeanGray, DeviationGray)</l>
+<l>        area_center (SmallSingle, Area, Row, Column)</l>
+<c>        * 使消息其完全显示在图形窗口内。</c>
+<l>        if (Row &gt; MaxRow)</l>
+<l>            Row := MaxRow</l>
+<l>        endif</l>
+<l>        if (Column &gt; MaxColumn)</l>
+<l>            Column := MaxColumn</l>
+<l>        endif</l>
+<l>        if (Row &lt; MinRow)</l>
+<l>            Row := MinRow</l>
+<l>        endif</l>
+<l>        if (Column &lt; MinColumn)</l>
+<l>            Column := MinColumn</l>
+<l>        endif</l>
+<l>        dev_disp_text (['Area = ' + Area,'Intensity = ' + MeanGray$'.3'], 'image', Row + 10, Column - 90, 'black', 'box_color', '#fce9d4dd')</l>
+<l>    endif</l>
+<l>endwhile</l>
+<l>dev_set_line_width (1)</l>
+<l>dev_update_on ()</l>
+</body>
+<docu id="main">
+<parameters/>
+</docu>
+</procedure>
+</hdevelop>
