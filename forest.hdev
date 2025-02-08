@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hdevelop file_version="1.2" halcon_version="18.11.0.1">
+<procedure name="main">
+<interface/>
+<body>
+<c>* 加载图像</c>
+<l>read_image (Forest, 'forest_air1')</l>
+<l>decompose3 (Forest, Red, Green, Blue)</l>
+<l>get_image_size (Forest, Width, Height)</l>
+<c></c>
+<c>* 初始化显示窗口</c>
+<l>dev_close_window ()</l>
+<l>dev_update_window ('off')</l>
+<l>dev_open_window (0, 0, Width, Height, 'black', WindowHandle)</l>
+<l>dev_set_color ('green')</l>
+<l>dev_set_line_width (3)</l>
+<l>dev_set_draw ('margin')</l>
+<c></c>
+<c>* 在蓝色通道图像中提取出道路</c>
+<l>threshold (Blue, BlueBright, 80, 255)</l>
+<l>connection (BlueBright, BlueBrightConnection)</l>
+<l>select_shape (BlueBrightConnection, Path, 'area', 'and', 100, 100000000)</l>
+<l>dev_display (Forest)</l>
+<l>dev_display (Path)</l>
+<l>disp_continue_message (WindowHandle, 'black', 'true')</l>
+<l>stop ()</l>
+<c></c>
+<c>* 在红色通道图像中提取出山毛榉树</c>
+<l>threshold (Red, RedBright, 120, 255)</l>
+<l>connection (RedBright, RedBrightConnection)</l>
+<l>select_shape (RedBrightConnection, RedBrightBig, 'area', 'and', 1500, 10000000)</l>
+<l>closing_circle (RedBrightBig, RedBrightClosing, 7.5)</l>
+<l>opening_circle (RedBrightClosing, RedBrightOpening, 9.5)</l>
+<l>connection (RedBrightOpening, RedBrightOpeningConnection)</l>
+<l>select_shape (RedBrightOpeningConnection, BeechBig, 'area', 'and', 1000, 100000000)</l>
+<l>select_gray (BeechBig, Blue, Beech, 'mean', 'and', 0, 59)</l>
+<l>dev_display (Forest)</l>
+<l>dev_display (Beech)</l>
+<l>disp_continue_message (WindowHandle, 'black', 'true')</l>
+<l>stop ()</l>
+<c></c>
+<c>* 在红色通道中去掉 Path 和 Beech 区域后，再使用亮度和面积筛选出草地区域</c>
+<l>union1 (Beech, BeechUnion)</l>
+<l>union2 (BeechUnion, Path, BeechAndPath)</l>
+<l>complement (BeechAndPath, NotBeechNotPath)</l>
+<l>reduce_domain (Red, NotBeechNotPath, NotBeechNotPathRed)</l>
+<l>threshold (NotBeechNotPathRed, BrightRest, 150, 255)</l>
+<l>connection (BrightRest, BrightRestConnection)</l>
+<l>select_shape (BrightRestConnection, Meadow, 'area', 'and', 500, 1000000)</l>
+<l>dev_display (Forest)</l>
+<l>dev_display (Meadow)</l>
+<l>disp_continue_message (WindowHandle, 'black', 'true')</l>
+<l>stop ()</l>
+<c></c>
+<c>* 针叶树的提取采用分水岭算法，并在“盆地” 区域内进行额外的阈值处理，以去除阴影区域</c>
+<l>union2 (Path, RedBrightClosing, BeechPath)</l>
+<l>smooth_image (Red, RedGauss, 'gauss', 4.0)</l>
+<l>invert_image (RedGauss, Invert)</l>
+<l>watersheds (Invert, SpruceRed, Watersheds)</l>
+<l>select_shape (SpruceRed, SpruceRedLarge, 'area', 'and', 100, 5000)</l>
+<l>select_gray (SpruceRedLarge, Red, SpruceRedInitial, 'max', 'and', 100, 200)</l>
+<l>gen_empty_obj (LocalThresh)</l>
+<l>count_obj (SpruceRedInitial, NumSpruce)</l>
+<l>dev_update_var ('off')</l>
+<l>dev_update_pc ('off')</l>
+<l>for i := 1 to NumSpruce by 1</l>
+<l>    select_obj (SpruceRedInitial, SingleSpruce, i)</l>
+<c>    * 这里Percent = 50，实际上是计算中位数，更直观的是使用这种做法</c>
+<l>    * gray_features (SingleSpruce, Red, 'median', Value)</l>
+<l>    min_max_gray (SingleSpruce, Red, 50, Min, Max, Range)</l>
+<l>    reduce_domain (Red, SingleSpruce, SingleSpruceRed)</l>
+<l>    threshold (SingleSpruceRed, SingleSpruceBright, Min, 255)</l>
+<l>    connection (SingleSpruceBright, SingleSpruceBrightCon)</l>
+<l>    select_shape_std (SingleSpruceBrightCon, MaxAreaSpruce, 'max_area', 70)</l>
+<l>    concat_obj (MaxAreaSpruce, LocalThresh, LocalThresh)</l>
+<l>endfor</l>
+<l>opening_circle (LocalThresh, FinalSpruce, 1.5)</l>
+<c></c>
+<c>* 最终显示图像</c>
+<l>dev_display (Forest)</l>
+<l>dev_set_color ('orange')</l>
+<l>dev_display (FinalSpruce)</l>
+<l>dev_set_color ('green')</l>
+<l>dev_display (Beech)</l>
+<l>dev_set_color ('blue')</l>
+<l>dev_display (Meadow)</l>
+</body>
+<docu id="main">
+<parameters/>
+</docu>
+</procedure>
+</hdevelop>
