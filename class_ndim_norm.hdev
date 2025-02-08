@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hdevelop file_version="1.2" halcon_version="18.11.0.1">
+<procedure name="main">
+<interface/>
+<body>
+<c>* 读取图像</c>
+<l>read_image (Image, 'ic')</l>
+<c></c>
+<c>* 初始化chuang'kou</c>
+<l>get_image_size (Image, Width, Height)</l>
+<l>dev_close_window ()</l>
+<l>dev_open_window (0, 0, Width, Height, 'black', WindowID)</l>
+<l>dev_display (Image)</l>
+<l>dev_set_color ('red')</l>
+<c></c>
+<c>* 目标区域</c>
+<l>gen_rectangle1 (Region, 360, 198, 369, 226)</l>
+<l>gen_empty_region (EmptyRegion)</l>
+<c></c>
+<c>* 学习区域特征</c>
+<l>learn_ndim_norm (Region, EmptyRegion, Image, 'euclid', 10, 0.01, Radius, Center, Quality)</l>
+<c></c>
+<c>* 寻找区域</c>
+<l>class_ndim_norm (Image, Regions, 'euclid', 'multiple', Radius, Center)</l>
+<l>dev_set_color ('blue')</l>
+<l>dev_display (Image)</l>
+<l>dev_display (Regions)</l>
+</body>
+<docu id="main">
+<parameters/>
+</docu>
+</procedure>
+</hdevelop>

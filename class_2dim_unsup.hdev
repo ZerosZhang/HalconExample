@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hdevelop file_version="1.2" halcon_version="18.11.0.1">
+<procedure name="main">
+<interface/>
+<body>
+<c>* 读取图像</c>
+<l>read_image (Image, 'patras')</l>
+<c></c>
+<c>* 初始化窗口</c>
+<l>dev_close_window ()</l>
+<l>get_image_size (Image, Width, Height)</l>
+<l>dev_open_window (0, 0, Width, Height, 'white', WindowID)</l>
+<c></c>
+<c>* 将输入的彩色图像Image分解为三个单通道图像：Red、Green和Blue</c>
+<l>decompose3 (Image, Red, Green, Blue)</l>
+<c></c>
+<l>dev_display (Red)</l>
+<l>dev_set_draw ('fill')</l>
+<l>dev_set_colored (6)</l>
+<l>dev_display (Red)</l>
+<c></c>
+<c>* 对Red和Blue通道图像进行中值滤波。</c>
+<l>median_image (Red, RedMedian, 'square', 5, 'mirrored')</l>
+<l>median_image (Blue, BlueMedian, 'square', 5, 'mirrored')</l>
+<c></c>
+<c>* 基于RedMedian和BlueMedian两个中值滤波后的图像进行无监督的二维分类，</c>
+<c>* 分类过程中，使用了 30 个初始聚类中心，并且限制最大分类数为 3 。</c>
+<l>class_2dim_unsup (RedMedian, BlueMedian, Classes, 30, 3)</l>
+</body>
+<docu id="main">
+<parameters/>
+</docu>
+</procedure>
+</hdevelop>
