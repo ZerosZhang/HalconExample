@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hdevelop file_version="1.2" halcon_version="18.11.0.1">
+<procedure name="main">
+<interface/>
+<body>
+<c>* 检查倒角后铸造零件上长孔之间的距离</c>
+<c></c>
+<c>* step 1: 获取图片并初始化窗口</c>
+<l>read_image (Zeiss1, 'zeiss1')</l>
+<l>get_image_size (Zeiss1, Width, Height)</l>
+<l>dev_close_window ()</l>
+<l>dev_open_window (0, 0, Width, Height, 'black', WindowHandle)</l>
+<l>set_display_font (WindowHandle, 14, 'mono', 'true', 'false')</l>
+<l>dev_display (Zeiss1)</l>
+<l>disp_continue_message (WindowHandle, 'black', 'true')</l>
+<l>stop ()</l>
+<c></c>
+<c>* step 2： 创建圆弧测量对象</c>
+<l>* draw_circle (WindowHandle, Row, Column, Radius)</l>
+<l>Row := 275</l>
+<l>Column := 335</l>
+<l>Radius := 107</l>
+<l>AngleStart := rad(5)</l>
+<l>AngleExtent := rad(45)</l>
+<l>dev_set_draw ('fill')</l>
+<l>dev_set_line_width (3)</l>
+<l>get_points_ellipse (AngleStart + AngleExtent, Row, Column, 0, Radius, Radius, \
+                    RowPoint, ColPoint)</l>
+<l>dev_set_color ('red')</l>
+<l>disp_cross (WindowHandle, RowPoint, ColPoint, 20, rad(45))</l>
+<l>dev_set_color ('green')</l>
+<l>disp_arc (WindowHandle, Row, Column, AngleExtent, RowPoint, ColPoint)</l>
+<c>* 此处实际是一个圆环的弧，圆环的半径为10（宽度的一半）</c>
+<l>gen_measure_arc (Row, Column, Radius, AngleStart, AngleExtent, 10, \
+                 Width, Height, 'nearest_neighbor', MeasureHandle)</l>
+<l>disp_continue_message (WindowHandle, 'black', 'true')</l>
+<l>stop ()</l>
+<c></c>
+<c>* step 3: 计算和圆弧垂直的边缘</c>
+<l>measure_pos (Zeiss1, MeasureHandle, 1, 10, 'all', 'all', \
+             RowEdge, ColumnEdge, Amplitude, Distance)</l>
+<l>distance_pp (RowEdge[0], ColumnEdge[0], RowEdge[1], ColumnEdge[1], IntermedDist)</l>
+<c></c>
+<c>* step 4: 显示结果</c>
+<l>dev_display (Zeiss1)</l>
+<l>dev_set_color ('green')</l>
+<l>disp_arc (WindowHandle, Row, Column, AngleExtent, RowPoint, ColPoint)</l>
+<l>dev_set_color ('red')</l>
+<l>disp_cross (WindowHandle, RowEdge[0], ColumnEdge[0], 10, rad(45))</l>
+<l>disp_cross (WindowHandle, RowEdge[1], ColumnEdge[1], 10, rad(45))</l>
+<l>disp_line (WindowHandle, RowEdge[0], ColumnEdge[0], RowEdge[1], ColumnEdge[1])</l>
+<l>dev_set_color ('yellow')</l>
+<l>disp_message (WindowHandle, 'Distance: ' + IntermedDist, 'image', 250, 80, 'yellow', 'false')</l>
+<c></c>
+<c>*************************************************************************</c>
+<c>* 这里是一个临时测试: </c>
+<c>* 1. IntraDistance = Distance， 说明 measure_pos 和 measure_pairs 的结果相同</c>
+<c>* 2. Distance &gt; IntermedDist, 说明 measure_pos 计算的是圆弧的长度， 而非直线距离</c>
+<l>measure_pairs (Zeiss1, MeasureHandle, 1, 10, 'all', 'all', \
+               RowEdgeFirst, ColumnEdgeFirst, AmplitudeFirst, \
+               RowEdgeSecond, ColumnEdgeSecond, AmplitudeSecond, \
+               IntraDistance, InterDistance)</l>
+</body>
+<docu id="main">
+<parameters/>
+</docu>
+</procedure>
+</hdevelop>
