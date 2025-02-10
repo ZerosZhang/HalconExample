@@ -3,15 +3,15 @@
 <procedure name="main">
 <interface/>
 <body>
-<c>* fuse.hdev: measuring the width of a fuse wire</c>
-<c>* </c>
-<l>dev_update_window ('off')</l>
-<l>dev_close_window ()</l>
+<c>* fuse.hdev: 测量保险丝电线的宽度</c>
+<c></c>
 <c>* ****</c>
-<c>* step: acquire image</c>
+<c>* step 1: 获取图像</c>
 <c>* ****</c>
 <l>read_image (Fuse, 'fuse')</l>
 <l>get_image_size (Fuse, Width, Height)</l>
+<l>dev_update_window ('off')</l>
+<l>dev_close_window ()</l>
 <l>dev_open_window_fit_image (Fuse, 0, 0, Width, Height, WindowID)</l>
 <l>set_display_font (WindowID, 12, 'mono', 'true', 'false')</l>
 <l>dev_set_draw ('margin')</l>
@@ -20,53 +20,70 @@
 <l>set_display_font (WindowID, 12, 'mono', 'true', 'false')</l>
 <l>disp_continue_message (WindowID, 'black', 'true')</l>
 <l>stop ()</l>
+<c></c>
 <c>* ****</c>
-<c>* step: create measure object</c>
+<c>* step 2: 创建测量对象，由于 measure_object 无法显示，所以使用 gen_rectangle2 进行显示</c>
 <c>* ****</c>
-<c>* -&gt; specify ROI</c>
 <l>Row := 297</l>
 <l>Column := 545</l>
 <l>Length1 := 80</l>
 <l>Length2 := 10</l>
 <l>Angle := rad(90)</l>
+<c>* 此处 Rectangle 的方向是垂直向上</c>
 <l>gen_rectangle2 (ROI, Row, Column, Angle, Length1, Length2)</l>
-<c>* -&gt; create measure object</c>
-<l>gen_measure_rectangle2 (Row, Column, Angle, Length1, Length2, Width, Height, 'bilinear', MeasureHandle)</l>
+<l>gen_measure_rectangle2 (Row, Column, Angle, Length1, Length2, Width, Height, \
+                        'bilinear', MeasureHandle)</l>
 <l>dev_display (ROI)</l>
 <l>disp_continue_message (WindowID, 'black', 'true')</l>
 <l>stop ()</l>
+<c></c>
 <c>* ****</c>
-<c>* step: measure</c>
+<c>* step 3: 测量</c>
 <c>* ****</c>
-<l>measure_pairs (Fuse, MeasureHandle, 1, 1, 'negative', 'all', RowEdgeFirst, ColumnEdgeFirst, AmplitudeFirst, RowEdgeSecond, ColumnEdgeSecond, AmplitudeSecond, IntraDistance, InterDistance)</l>
+<l>measure_pairs (Fuse, MeasureHandle, 1, 1, 'negative', 'all',       \
+               RowEdgeFirst, ColumnEdgeFirst, AmplitudeFirst,      \
+               RowEdgeSecond, ColumnEdgeSecond, AmplitudeSecond,   \
+               IntraDistance, InterDistance)</l>
 <l>disp_continue_message (WindowID, 'black', 'true')</l>
+<c>* 显示 rectangle2 长轴经过的边缘的点</c>
+<l>dev_set_color ('red')</l>
+<l>gen_cross_contour_xld (Cross, RowEdgeFirst, ColumnEdgeFirst, 6, rad(45))</l>
+<l>dev_display (Cross)</l>
+<l>dev_set_color ('green')</l>
+<l>gen_cross_contour_xld (Cross, RowEdgeSecond, ColumnEdgeSecond, 6, rad(45))</l>
+<l>dev_display (Cross)</l>
 <l>stop ()</l>
+<c></c>
 <c>* ****</c>
-<c>* step: visualize results</c>
+<c>* step 4: 可视化结果</c>
 <c>* ****</c>
 <l>for i := 0 to |RowEdgeFirst| - 1 by 1</l>
-<l>    gen_contour_polygon_xld (EdgeFirst, [-sin(Angle + rad(90)) * Length2 + RowEdgeFirst[i],-sin(Angle - rad(90)) * Length2 + RowEdgeFirst[i]], [cos(Angle + rad(90)) * Length2 + ColumnEdgeFirst[i],cos(Angle - rad(90)) * Length2 + ColumnEdgeFirst[i]])</l>
-<l>    gen_contour_polygon_xld (EdgeSecond, [-sin(Angle + rad(90)) * Length2 + RowEdgeSecond[i],-sin(Angle - rad(90)) * Length2 + RowEdgeSecond[i]], [cos(Angle + rad(90)) * Length2 + ColumnEdgeSecond[i],cos(Angle - rad(90)) * Length2 + ColumnEdgeSecond[i]])</l>
-<l>    dev_set_color ('cyan')</l>
+<c>    * 显示边缘的线段（下面的计算方式比较通用）</c>
+<l>    gen_contour_polygon_xld (EdgeFirst, \
+                             [-sin(Angle + rad(90)) * Length2 + RowEdgeFirst[i],     \
+                              -sin(Angle - rad(90)) * Length2 + RowEdgeFirst[i]],    \
+                             [cos(Angle + rad(90)) * Length2 + ColumnEdgeFirst[i],   \
+                              cos(Angle - rad(90)) * Length2 + ColumnEdgeFirst[i]])</l>
+<l>    gen_contour_polygon_xld (EdgeSecond, \
+                             [-sin(Angle + rad(90)) * Length2 + RowEdgeSecond[i],    \
+                              -sin(Angle - rad(90)) * Length2 + RowEdgeSecond[i]],   \
+                             [cos(Angle + rad(90)) * Length2 + ColumnEdgeSecond[i],  \
+                              cos(Angle - rad(90)) * Length2 + ColumnEdgeSecond[i]])</l>
+<l>    dev_set_color ('red')</l>
 <l>    dev_display (EdgeFirst)</l>
-<l>    dev_set_color ('magenta')</l>
+<l>    dev_set_color ('green')</l>
 <l>    dev_display (EdgeSecond)</l>
-<l>    dev_set_color ('blue')</l>
-<l>    if (i == 0)</l>
-<l>        set_tposition (WindowID, RowEdgeFirst[i] + 5, ColumnEdgeFirst[i] + 20)</l>
-<l>    else</l>
-<l>        set_tposition (WindowID, RowEdgeFirst[i] - 40, ColumnEdgeFirst[i] + 20)</l>
-<l>    endif</l>
+<l>    dev_set_color ('orange')</l>
+<l>    set_tposition (WindowID, RowEdgeFirst[i] - 15, ColumnEdgeFirst[i] + 20)</l>
 <l>    write_string (WindowID, 'width: ' + IntraDistance[i] + ' pix')</l>
 <l>endfor</l>
 <l>disp_continue_message (WindowID, 'black', 'true')</l>
 <l>stop ()</l>
 <c>* ****</c>
-<c>* step: destroy measure object</c>
+<c>* step 5: 销毁测量对象</c>
 <c>* ****</c>
 <l>close_measure (MeasureHandle)</l>
 <l>dev_update_window ('on')</l>
-<l>dev_clear_window ()</l>
 </body>
 <docu id="main">
 <parameters/>
