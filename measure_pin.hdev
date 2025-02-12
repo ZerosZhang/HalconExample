@@ -3,9 +3,7 @@
 <procedure name="main">
 <interface/>
 <body>
-<c>* Pin Measurement: Example for the application of the measure package</c>
-<c>* including a lot of visualization operators</c>
-<c>* </c>
+<c>* 读取图片，初始化显示窗口</c>
 <l>dev_close_window ()</l>
 <l>read_image (Image, 'ic_pin')</l>
 <l>get_image_size (Image, Width, Height)</l>
@@ -14,7 +12,8 @@
 <l>dev_display (Image)</l>
 <l>disp_continue_message (WindowHandle, 'black', 'true')</l>
 <l>stop ()</l>
-<l>* draw_rectangle2 (WindowHandle, Row, Column, Phi, Length1, Length2)</l>
+<c></c>
+<c>* 创建测量区域并测量针脚宽度</c>
 <l>Row := 47</l>
 <l>Column := 485</l>
 <l>Phi := 0</l>
@@ -25,39 +24,29 @@
 <l>dev_set_line_width (3)</l>
 <l>gen_rectangle2 (Rectangle, Row, Column, Phi, Length1, Length2)</l>
 <l>gen_measure_rectangle2 (Row, Column, Phi, Length1, Length2, Width, Height, 'nearest_neighbor', MeasureHandle)</l>
-<l>disp_continue_message (WindowHandle, 'black', 'true')</l>
-<l>stop ()</l>
-<l>dev_update_pc ('off')</l>
-<l>dev_update_var ('off')</l>
-<l>n := 100</l>
-<l>count_seconds (Seconds1)</l>
-<l>for i := 1 to n by 1</l>
-<l>    measure_pairs (Image, MeasureHandle, 1.5, 30, 'negative', 'all', RowEdgeFirst, ColumnEdgeFirst, AmplitudeFirst, RowEdgeSecond, ColumnEdgeSecond, AmplitudeSecond, PinWidth, PinDistance)</l>
-<l>endfor</l>
-<l>count_seconds (Seconds2)</l>
-<l>Time := Seconds2 - Seconds1</l>
-<l>disp_continue_message (WindowHandle, 'black', 'true')</l>
-<l>stop ()</l>
-<l>dev_set_color ('red')</l>
+<l>measure_pairs (Image, MeasureHandle, 1.5, 30, 'negative', 'all', RowEdgeFirst, ColumnEdgeFirst, AmplitudeFirst, RowEdgeSecond, ColumnEdgeSecond, AmplitudeSecond, PinWidth, PinDistance)</l>
 <l>disp_line (WindowHandle, RowEdgeFirst, ColumnEdgeFirst, RowEdgeSecond, ColumnEdgeSecond)</l>
+<l>stop ()</l>
+<c></c>
+<c>* 显示测量结果</c>
+<l>dev_set_color ('red')</l>
 <l>avgPinWidth := sum(PinWidth) / |PinWidth|</l>
 <l>avgPinDistance := sum(PinDistance) / |PinDistance|</l>
 <l>numPins := |PinWidth|</l>
 <l>dev_set_color ('yellow')</l>
-<l>disp_message (WindowHandle, 'Number of pins: ' + numPins, 'image', 200, 100, 'yellow', 'false')</l>
-<l>disp_message (WindowHandle, 'Average Pin Width:  ' + avgPinWidth, 'image', 260, 100, 'yellow', 'false')</l>
-<l>disp_message (WindowHandle, 'Average Pin Distance:  ' + avgPinDistance, 'image', 320, 100, 'yellow', 'false')</l>
-<l>* dump_window (WindowHandle, 'tiff_rgb', 'C:\\Temp\\pins_result')</l>
+<l>disp_message (WindowHandle, '针脚数量: ' + numPins, 'image', 200, 100, 'yellow', 'false')</l>
+<l>disp_message (WindowHandle, '针脚平均宽度:  ' + avgPinWidth, 'image', 260, 100, 'yellow', 'false')</l>
+<l>disp_message (WindowHandle, '针脚平均间距:  ' + avgPinDistance, 'image', 320, 100, 'yellow', 'false')</l>
 <l>disp_continue_message (WindowHandle, 'black', 'true')</l>
 <l>stop ()</l>
-<l>* draw_rectangle1 (WindowHandle, Row1, Column1, Row2, Column2)</l>
+<c></c>
+<c>* 精细显示，放大图片区域</c>
 <l>Row1 := 0</l>
 <l>Column1 := 600</l>
 <l>Row2 := 100</l>
 <l>Column2 := 700</l>
 <l>dev_set_color ('blue')</l>
 <l>disp_rectangle1 (WindowHandle, Row1, Column1, Row2, Column2)</l>
-<l>stop ()</l>
 <l>dev_set_part (Row1, Column1, Row2, Column2)</l>
 <l>dev_display (Image)</l>
 <l>dev_set_color ('green')</l>
@@ -66,12 +55,12 @@
 <l>disp_line (WindowHandle, RowEdgeFirst, ColumnEdgeFirst, RowEdgeSecond, ColumnEdgeSecond)</l>
 <l>disp_continue_message (WindowHandle, 'black', 'true')</l>
 <l>stop ()</l>
+<c></c>
+<c>* 创建测量区域并测量针脚高度，这里的原理也是找边缘对</c>
 <l>dev_set_part (0, 0, Height - 1, Width - 1)</l>
 <l>dev_display (Image)</l>
 <l>disp_continue_message (WindowHandle, 'black', 'true')</l>
-<l>stop ()</l>
 <l>dev_set_color ('green')</l>
-<l>* draw_rectangle2 (WindowHandle, Row, Column, Phi, Length1, Length2)</l>
 <l>Row := 508</l>
 <l>Column := 200</l>
 <l>Phi := -1.5708</l>
@@ -79,7 +68,6 @@
 <l>Length2 := 35</l>
 <l>gen_rectangle2 (Rectangle, Row, Column, Phi, Length1, Length2)</l>
 <l>gen_measure_rectangle2 (Row, Column, Phi, Length1, Length2, Width, Height, 'nearest_neighbor', MeasureHandle)</l>
-<l>stop ()</l>
 <l>measure_pos (Image, MeasureHandle, 1.5, 30, 'all', 'all', RowEdge, ColumnEdge, Amplitude, Distance)</l>
 <l>PinHeight1 := RowEdge[1] - RowEdge[0]</l>
 <l>PinHeight2 := RowEdge[3] - RowEdge[2]</l>
@@ -87,9 +75,6 @@
 <l>disp_line (WindowHandle, RowEdge, ColumnEdge - Length2, RowEdge, ColumnEdge + Length2)</l>
 <l>disp_message (WindowHandle, 'Pin Height:  ' + PinHeight1, 'image', RowEdge[1] + 40, ColumnEdge[1] + 100, 'yellow', 'false')</l>
 <l>disp_message (WindowHandle, 'Pin Height:  ' + PinHeight2, 'image', RowEdge[3] - 120, ColumnEdge[3] + 100, 'yellow', 'false')</l>
-<l>* dump_window (WindowHandle, 'tiff_rgb', 'C:\\Temp\\pins_height_result')</l>
-<l>dev_set_draw ('fill')</l>
-<l>dev_set_line_width (1)</l>
 </body>
 <docu id="main">
 <parameters/>
