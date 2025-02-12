@@ -50,7 +50,7 @@
 <l>disp_cross (WindowHandle, RowEdge[1], ColumnEdge[1], 10, rad(45))</l>
 <l>disp_line (WindowHandle, RowEdge[0], ColumnEdge[0], RowEdge[1], ColumnEdge[1])</l>
 <l>dev_set_color ('yellow')</l>
-<l>disp_message (WindowHandle, 'Distance: ' + IntermedDist, 'image', 250, 80, 'yellow', 'false')</l>
+<l>disp_message (WindowHandle, 'Distance: ' + IntermedDist, 'image', 250, 280, 'yellow', 'false')</l>
 <c></c>
 <c>*************************************************************************</c>
 <c>* 这里是一个临时测试: </c>

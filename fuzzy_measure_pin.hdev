@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hdevelop file_version="1.2" halcon_version="18.11.0.1">
+<procedure name="main">
+<interface/>
+<body>
+<c>* 模糊测量</c>
+<c></c>
+<c>* 读取图像，初始化窗口</c>
+<l>read_image (Image, 'board/board-06')</l>
+<l>get_image_size (Image, Width, Height)</l>
+<l>dev_set_draw ('margin')</l>
+<l>dev_set_line_width (3)</l>
+<l>dev_close_window ()</l>
+<l>dev_open_window (0, 0, Width, Height, 'black', WindowHandle)</l>
+<c>* </c>
+<c>* 定义测量矩形对象</c>
+<l>Row1 := 305.5</l>
+<l>Col1 := 375.5</l>
+<l>Phi1 := 0.982</l>
+<l>Length1 := 167</l>
+<l>Length2 := 8</l>
+<l>gen_measure_rectangle2 (Row1, Col1, Phi1, Length1, Length2, Width, Height, \
+                        'nearest_neighbor', MeasureHandle1)</l>
+<l>Row2 := 188.5</l>
+<l>Col2 := 202.5</l>
+<l>Phi2 := Phi1 - rad(180)</l>
+<l>gen_measure_rectangle2 (Row2, Col2, Phi2, Length1, Length2, Width, Height, \
+                        'nearest_neighbor', MeasureHandle2)</l>
+<c>* 创建一个模糊成员函数， 用于选择芯片引脚大小（约 11 像素）的边缘对</c>
+<c>* 这一段的详细原理参考 wolai 中的 fuzzy_measure_pin</c>
+<l>create_funct_1d_pairs ([0.0, 0.3], [1.0, 0.0], FuzzyAbsSizeDiffFunction)</l>
+<l>set_fuzzy_measure_norm_pair (MeasureHandle1, 11.0, 'size_abs_diff', FuzzyAbsSizeDiffFunction)</l>
+<l>set_fuzzy_measure_norm_pair (MeasureHandle2, 11.0, 'size_abs_diff', FuzzyAbsSizeDiffFunction)</l>
+<l>fuzzy_measure_pairs (Image, MeasureHandle1, 1, 30, 0.5, 'positive', \
+                     RowEdgeFirst1, ColumnEdgeFirst1, AmplitudeFirst1, \
+                     RowEdgeSecond1, ColumnEdgeSecond1, AmplitudeSecond1, \
+                     RowEdgeMiddle1, ColumnEdgeMiddle1, FuzzyScore1, \
+                     IntraDistance1, InterDistance1)</l>
+<l>fuzzy_measure_pairs (Image, MeasureHandle2, 1, 30, 0.5, 'positive', \
+                     RowEdgeFirst2, ColumnEdgeFirst2, AmplitudeFirst2,\
+                     RowEdgeSecond2, ColumnEdgeSecond2, AmplitudeSecond2, \
+                     RowEdgeMiddle2, ColumnEdgeMiddle2, FuzzyScore2, \
+                     IntraDistance2, InterDistance2)</l>
+<c></c>
+<l>dev_display (Image)</l>
+<l>dev_display_measure_object (Row1, Col1, Phi1, Length1, Length2)</l>
+<l>dev_display_measure_object (Row2, Col2, Phi2, Length1, Length2)</l>
+<l>stop()</l>
+<c></c>
+<c>* </c>
+<c>* 显示结果</c>
+<l>dev_set_draw ('fill')</l>
+<l>Pin := 1</l>
+<l>dev_display_profile_points ([RowEdgeFirst1,RowEdgeSecond1], [ColumnEdgeFirst1,ColumnEdgeSecond1], Row1, Col1, Phi1, Length1, Length2)</l>
+<l>for I := 0 to |ColumnEdgeFirst1| - 1 by 1</l>
+<l>    disp_message (WindowHandle, 'size:' + IntraDistance1[I]$'.2f' + ' score:' + FuzzyScore1[I]$'.2f', 'image', RowEdgeSecond1[I], ColumnEdgeSecond1[I] + 10, 'yellow', 'false')</l>
+<l>    MRow := RowEdgeSecond1[I] - 5</l>
+<l>    MCol := ColumnEdgeSecond1[I] - 20</l>
+<l>    dev_set_color ('white')</l>
+<l>    gen_circle (Circle, MRow, MCol, 10)</l>
+<l>    dev_display (Circle)</l>
+<l>    get_string_extents (WindowHandle, Pin, Ascent, Descent, SWidth, SHeight)</l>
+<l>    disp_message (WindowHandle, Pin, 'window', MRow - SHeight / 2, MCol - SWidth / 2, 'black', 'false')</l>
+<l>    Pin := Pin + 1</l>
+<l>endfor</l>
+<l>dev_display_profile_points ([RowEdgeFirst2,RowEdgeSecond2], [ColumnEdgeFirst2,ColumnEdgeSecond2], Row2, Col2, Phi2, Length1, Length2)</l>
+<l>for I := 0 to |ColumnEdgeFirst2| - 1 by 1</l>
+<l>    dev_set_color ('yellow')</l>
+<l>    disp_message (WindowHandle, 'size:' + IntraDistance2[I]$'.2f' + ' score:' + FuzzyScore2[I]$'.2f', 'image', RowEdgeFirst2[I], ColumnEdgeFirst2[I] + 10, 'yellow', 'false')</l>
+<l>    MRow := RowEdgeFirst2[I] - 5</l>
+<l>    MCol := ColumnEdgeFirst2[I] - 20</l>
+<l>    dev_set_color ('white')</l>
+<l>    gen_circle (Circle, MRow, MCol, 10)</l>
+<l>    dev_display (Circle)</l>
+<l>    get_string_extents (WindowHandle, Pin, Ascent, Descent, SWidth, SHeight)</l>
+<l>    disp_message (WindowHandle, Pin, 'window', MRow - SHeight / 2, MCol - SWidth / 2, 'black', 'false')</l>
+<l>    Pin := Pin + 1</l>
+<l>endfor</l>
+</body>
+<docu id="main">
+<parameters/>
+</docu>
+</procedure>
+<procedure name="dev_display_profile_line">
+<interface>
+<ic>
+<par name="Row" base_type="ctrl" dimension="0"/>
+<par name="Col" base_type="ctrl" dimension="0"/>
+<par name="Phi" base_type="ctrl" dimension="0"/>
+<par name="Length1" base_type="ctrl" dimension="0"/>
+<par name="Length2" base_type="ctrl" dimension="0"/>
+</ic>
+</interface>
+<body>
+<l>ArrowAngle := rad(45) / 2</l>
+<l>ArrowLength := Length1 * 0.2</l>
+<l>PSize := Length2 * 0.2</l>
+<l>RowStart := Row + sin(Phi) * Length1</l>
+<l>RowEnd := Row - sin(Phi) * Length1</l>
+<l>ColStart := Col - cos(Phi) * Length1</l>
+<l>ColEnd := Col + cos(Phi) * Length1</l>
+<l>gen_contour_polygon_xld (CProfile, [RowStart,RowEnd], [ColStart,ColEnd])</l>
+<l>gen_contour_polygon_xld (CArrow, [RowEnd - sin(ArrowAngle - Phi) * ArrowLength,RowEnd,RowEnd + sin(ArrowAngle + Phi) * ArrowLength], [ColEnd - cos(ArrowAngle - Phi) * ArrowLength,ColEnd,ColEnd - cos(ArrowAngle + Phi) * ArrowLength])</l>
+<l>gen_contour_polygon_xld (CMidPoint, [Row - sin(rad(90) + Phi) * PSize,Row - sin(Phi - rad(90)) * PSize], [Col + cos(rad(90) + Phi) * PSize,Col + cos(Phi - rad(90)) * PSize])</l>
+<l>dev_set_line_width (4)</l>
+<l>dev_set_color ('white')</l>
+<l>dev_display (CProfile)</l>
+<l>dev_display (CArrow)</l>
+<l>dev_set_line_width (2)</l>
+<l>dev_set_color ('black')</l>
+<l>dev_display (CProfile)</l>
+<l>dev_display (CArrow)</l>
+<l>return ()</l>
+</body>
+<docu id="dev_display_profile_line">
+<parameters>
+<parameter id="Col"/>
+<parameter id="Length1"/>
+<parameter id="Length2"/>
+<parameter id="Phi"/>
+<parameter id="Row"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="dev_display_measure_object">
+<interface>
+<ic>
+<par name="Row" base_type="ctrl" dimension="0"/>
+<par name="Col" base_type="ctrl" dimension="0"/>
+<par name="Phi" base_type="ctrl" dimension="0"/>
+<par name="Length1" base_type="ctrl" dimension="0"/>
+<par name="Length2" base_type="ctrl" dimension="0"/>
+</ic>
+</interface>
+<body>
+<l>RowStart := Row + sin(Phi) * Length1</l>
+<l>RowEnd := Row - sin(Phi) * Length1</l>
+<l>ColStart := Col - cos(Phi) * Length1</l>
+<l>ColEnd := Col + cos(Phi) * Length1</l>
+<l>drow := sin(rad(90) - Phi) * Length2</l>
+<l>dcol := cos(rad(90) - Phi) * Length2</l>
+<l>gen_contour_polygon_xld (Contour, [RowStart - drow,RowEnd - drow,RowEnd + drow,RowStart + drow,RowStart - drow], [ColStart - dcol,ColEnd - dcol,ColEnd + dcol,ColStart + dcol,ColStart - dcol])</l>
+<l>dev_set_line_width (2)</l>
+<l>dev_set_color ('green')</l>
+<l>dev_display (Contour)</l>
+<l>dev_display_profile_line (Row, Col, Phi, Length1, Length2)</l>
+<l>return ()</l>
+</body>
+<docu id="dev_display_measure_object">
+<parameters>
+<parameter id="Col"/>
+<parameter id="Length1"/>
+<parameter id="Length2"/>
+<parameter id="Phi"/>
+<parameter id="Row"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="dev_display_profile_points">
+<interface>
+<ic>
+<par name="PRows" base_type="ctrl" dimension="0"/>
+<par name="PCols" base_type="ctrl" dimension="0"/>
+<par name="Row" base_type="ctrl" dimension="0"/>
+<par name="Col" base_type="ctrl" dimension="0"/>
+<par name="Phi" base_type="ctrl" dimension="0"/>
+<par name="Length1" base_type="ctrl" dimension="0"/>
+<par name="Length2" base_type="ctrl" dimension="0"/>
+</ic>
+</interface>
+<body>
+<l>PSize := Length2 * 0.5</l>
+<l>RowStart := Row + sin(Phi) * Length1</l>
+<l>RowEnd := Row - sin(Phi) * Length1</l>
+<l>ColStart := Col - cos(Phi) * Length1</l>
+<l>ColEnd := Col + cos(Phi) * Length1</l>
+<l>for idx := 0 to |PRows| - 1 by 1</l>
+<l>    gen_contour_polygon_xld (CPoint, [PRows[idx] - sin(rad(90) + Phi) * PSize,PRows[idx] - sin(Phi - rad(90)) * PSize], [PCols[idx] + cos(rad(90) + Phi) * PSize,PCols[idx] + cos(Phi - rad(90)) * PSize])</l>
+<l>    dev_set_color ('red')</l>
+<l>    dev_set_line_width (3)</l>
+<l>    dev_display (CPoint)</l>
+<l>endfor</l>
+<l>return ()</l>
+</body>
+<docu id="dev_display_profile_points">
+<parameters>
+<parameter id="Col"/>
+<parameter id="Length1"/>
+<parameter id="Length2"/>
+<parameter id="PCols"/>
+<parameter id="PRows"/>
+<parameter id="Phi"/>
+<parameter id="Row"/>
+</parameters>
+</docu>
+</procedure>
+</hdevelop>
