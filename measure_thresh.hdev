@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hdevelop file_version="1.2" halcon_version="18.11.0.1">
+<procedure name="main">
+<interface/>
+<body>
+<l>dev_get_window (WindowHandle)</l>
+<l>dev_set_line_width (2)</l>
+<c></c>
+<l>read_image (Image, 'printer_chip/printer_chip_01')</l>
+<l>get_image_size (Image, Width, Height)</l>
+<c></c>
+<l>Row := 110</l>
+<l>Column := 800</l>
+<l>Phi := rad(0)</l>
+<l>Length1 := 750</l>
+<l>Length2 := 50</l>
+<l>gen_measure_rectangle2 (Row, Column, Phi, Length1, Length2, \
+                        Width, Height, 'nearest_neighbor', MeasureHandle)</l>
+<l>measure_thresh (Image, MeasureHandle, 1, 128, 'all', RowThresh, ColumnThresh, Distance)</l>
+<c></c>
+<c>* 显示测量矩形</c>
+<l>disp_cross (WindowHandle, RowThresh, ColumnThresh, 30, rad(45))</l>
+<l>dev_display_measure_object (Row, Column, Phi, Length1, Length2)</l>
+</body>
+<docu id="main">
+<parameters/>
+</docu>
+</procedure>
+<procedure name="dev_display_measure_object">
+<interface>
+<ic>
+<par name="Row" base_type="ctrl" dimension="0"/>
+<par name="Col" base_type="ctrl" dimension="0"/>
+<par name="Phi" base_type="ctrl" dimension="0"/>
+<par name="Length1" base_type="ctrl" dimension="0"/>
+<par name="Length2" base_type="ctrl" dimension="0"/>
+</ic>
+</interface>
+<body>
+<l>RowStart := Row + sin(Phi) * Length1</l>
+<l>RowEnd := Row - sin(Phi) * Length1</l>
+<l>ColStart := Col - cos(Phi) * Length1</l>
+<l>ColEnd := Col + cos(Phi) * Length1</l>
+<l>drow := sin(rad(90) - Phi) * Length2</l>
+<l>dcol := cos(rad(90) - Phi) * Length2</l>
+<l>gen_contour_polygon_xld (Contour, [RowStart - drow,RowEnd - drow,RowEnd + drow,RowStart + drow,RowStart - drow], [ColStart - dcol,ColEnd - dcol,ColEnd + dcol,ColStart + dcol,ColStart - dcol])</l>
+<l>dev_set_line_width (2)</l>
+<l>dev_set_color ('green')</l>
+<l>dev_display (Contour)</l>
+<l>dev_display_profile_line (Row, Col, Phi, Length1, Length2)</l>
+<l>return ()</l>
+</body>
+<docu id="dev_display_measure_object">
+<parameters>
+<parameter id="Col"/>
+<parameter id="Length1"/>
+<parameter id="Length2"/>
+<parameter id="Phi"/>
+<parameter id="Row"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="dev_display_profile_line">
+<interface>
+<ic>
+<par name="Row" base_type="ctrl" dimension="0"/>
+<par name="Col" base_type="ctrl" dimension="0"/>
+<par name="Phi" base_type="ctrl" dimension="0"/>
+<par name="Length1" base_type="ctrl" dimension="0"/>
+<par name="Length2" base_type="ctrl" dimension="0"/>
+</ic>
+</interface>
+<body>
+<l>ArrowAngle := rad(45) / 2</l>
+<l>ArrowLength := Length1 * 0.2</l>
+<l>PSize := Length2 * 0.2</l>
+<l>RowStart := Row + sin(Phi) * Length1</l>
+<l>RowEnd := Row - sin(Phi) * Length1</l>
+<l>ColStart := Col - cos(Phi) * Length1</l>
+<l>ColEnd := Col + cos(Phi) * Length1</l>
+<l>gen_contour_polygon_xld (CProfile, [RowStart,RowEnd], [ColStart,ColEnd])</l>
+<l>gen_contour_polygon_xld (CArrow, [RowEnd - sin(ArrowAngle - Phi) * ArrowLength,RowEnd,RowEnd + sin(ArrowAngle + Phi) * ArrowLength], [ColEnd - cos(ArrowAngle - Phi) * ArrowLength,ColEnd,ColEnd - cos(ArrowAngle + Phi) * ArrowLength])</l>
+<l>gen_contour_polygon_xld (CMidPoint, [Row - sin(rad(90) + Phi) * PSize,Row - sin(Phi - rad(90)) * PSize], [Col + cos(rad(90) + Phi) * PSize,Col + cos(Phi - rad(90)) * PSize])</l>
+<l>dev_set_line_width (4)</l>
+<l>dev_set_color ('white')</l>
+<l>dev_display (CProfile)</l>
+<l>dev_display (CArrow)</l>
+<l>dev_set_line_width (2)</l>
+<l>dev_set_color ('black')</l>
+<l>dev_display (CProfile)</l>
+<l>dev_display (CArrow)</l>
+<l>return ()</l>
+</body>
+<docu id="dev_display_profile_line">
+<parameters>
+<parameter id="Col"/>
+<parameter id="Length1"/>
+<parameter id="Length2"/>
+<parameter id="Phi"/>
+<parameter id="Row"/>
+</parameters>
+</docu>
+</procedure>
+</hdevelop>

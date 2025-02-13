@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hdevelop file_version="1.2" halcon_version="18.11.0.1">
+<procedure name="main">
+<interface/>
+<body>
+<c>* 本示例程序展示了如何使用 edges_color，以及 edges_color 和 edges_image 输出结果之间的差异。</c>
+<c></c>
+<l>dev_update_off ()</l>
+<l>read_image (Image, 'olympic_stadium')</l>
+<l>get_image_size (Image, Width, Height)</l>
+<l>dev_close_window ()</l>
+<l>dev_open_window (0, 0, Width, Height, 'black', WindowHandle)</l>
+<l>dev_set_part (0, 0, Height - 1, Width - 1)</l>
+<l>set_display_font (WindowHandle, 16, 'mono', 'true', 'false')</l>
+<l>dev_display (Image)</l>
+<l>Message := 'Color image'</l>
+<l>disp_message (WindowHandle, Message, 'window', 12, 12, 'black', 'true')</l>
+<l>stop ()</l>
+<c>* 将彩色图像转换为灰度图像。在灰度图像中，足球场和跑道之间没有对比度。</c>
+<l>rgb1_to_gray (Image, GrayImage)</l>
+<l>dev_display (GrayImage)</l>
+<l>Message := 'Gray value image'</l>
+<l>disp_message (WindowHandle, Message, 'window', 12, 12, 'black', 'true')</l>
+<l>stop ()</l>
+<c>* 计算无非最大抑制和滞后阈值的彩色边缘，即原始边缘振幅图像。</c>
+<c>* 请注意，在彩色边缘图像中，足球场和跑道之间有一条清晰可见的边缘。</c>
+<l>edges_color (Image, ImaAmp, ImaDir, 'canny', 1, 'none', -1, -1)</l>
+<l>dev_display (ImaAmp)</l>
+<l>Message := 'Color edge image'</l>
+<l>disp_message (WindowHandle, Message, 'window', 12, 12, 'black', 'true')</l>
+<l>stop ()</l>
+<c>* 计算无非最大抑制和滞后阈值的灰度值边缘，即原始边缘振幅图像。</c>
+<c>* 请注意，在灰度边缘图像中，足球场和跑道之间没有明显的边缘。</c>
+<l>edges_image (GrayImage, ImaAmpGray, ImaDirGray, 'canny', 1, 'none', -1, -1)</l>
+<l>dev_display (ImaAmpGray)</l>
+<l>Message := 'Gray value edge image'</l>
+<l>disp_message (WindowHandle, Message, 'window', 12, 12, 'black', 'true')</l>
+<l>stop ()</l>
+<c>* 现在进行彩色边缘提取，包括非最大值抑制和滞后阈值处理。注意足球场和跑道之间的分割边缘。</c>
+<l>edges_color (Image, ImaAmpHyst, ImaDirHyst, 'canny', 1, 'nms', 20, 40)</l>
+<l>threshold (ImaAmpHyst, RegionColor, 1, 255)</l>
+<l>skeleton (RegionColor, EdgesColor)</l>
+<l>dev_display (Image)</l>
+<l>dev_set_color ('blue')</l>
+<l>dev_display (EdgesColor)</l>
+<l>Message := 'Segmented color edges'</l>
+<l>disp_message (WindowHandle, Message, 'window', 12, 12, 'black', 'true')</l>
+<l>stop ()</l>
+<c>* 现在进行灰度值边缘提取，包括非最大上压和滞后阈值提取。请注意，足球场和跑道之间没有边缘。</c>
+<l>edges_image (GrayImage, ImaAmpGrayHyst, ImaDirGrayHyst, 'canny', 1, 'nms', 20, 40)</l>
+<l>threshold (ImaAmpGrayHyst, RegionGray, 1, 255)</l>
+<l>skeleton (RegionGray, EdgesGray)</l>
+<l>dev_display (GrayImage)</l>
+<l>dev_set_color ('blue')</l>
+<l>dev_display (EdgesGray)</l>
+<l>Message := 'Segmented gray value edges'</l>
+<l>disp_message (WindowHandle, Message, 'window', 12, 12, 'black', 'true')</l>
+<l>stop ()</l>
+<c>* 现在再次显示所有内容，但只显示图像中包含足球场和跑道的部分。</c>
+<l>Row1 := 220</l>
+<l>Col1 := 215</l>
+<l>Row2 := 399</l>
+<l>Col2 := 489</l>
+<l>dev_set_part (Row1, Col1, Row2, Col2)</l>
+<l>dev_display (Image)</l>
+<l>stop ()</l>
+<l>dev_display (GrayImage)</l>
+<l>stop ()</l>
+<l>dev_display (ImaAmp)</l>
+<l>stop ()</l>
+<l>dev_display (ImaAmpGray)</l>
+<l>stop ()</l>
+<l>dev_display (Image)</l>
+<l>dev_set_color ('blue')</l>
+<l>dev_display (EdgesColor)</l>
+<l>stop ()</l>
+<l>dev_display (GrayImage)</l>
+<l>dev_set_color ('blue')</l>
+<l>dev_display (EdgesGray)</l>
+</body>
+<docu id="main">
+<parameters/>
+</docu>
+</procedure>
+</hdevelop>
