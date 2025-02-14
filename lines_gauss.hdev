@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hdevelop file_version="1.2" halcon_version="18.11.0.1">
+<procedure name="main">
+<interface/>
+<body>
+<l>dev_close_window ()</l>
+<l>read_image (Angio, 'angio-part')</l>
+<l>get_image_size (Angio, Width, Height)</l>
+<l>dev_open_window (0, 0, 3 * Width / 2, 3 * Height / 2, 'black', WindowID)</l>
+<l>dev_display (Angio)</l>
+<l>dev_set_color ('blue')</l>
+<c></c>
+<c>* 提取轮廓线</c>
+<l>MaxLineWidth := 8</l>
+<l>Contrast := 12</l>
+<l>calculate_lines_gauss_parameters (MaxLineWidth, [Contrast,0], Sigma, Low, High)</l>
+<l>lines_gauss (Angio, Lines, Sigma, Low, High, 'dark', 'true', 'parabolic', 'true')</l>
+<l>count_obj (Lines, Number)</l>
+<c></c>
+<c>* 显示提取结果</c>
+<l>dev_update_pc ('off')</l>
+<l>dev_update_var ('off')</l>
+<l>for I := 1 to Number by 1</l>
+<l>    select_obj (Lines, Line, I)</l>
+<l>    get_contour_xld (Line, Row, Col)</l>
+<l>    get_contour_attrib_xld (Line, 'angle', Angle)</l>
+<l>    get_contour_attrib_xld (Line, 'width_left', WidthL)</l>
+<l>    get_contour_attrib_xld (Line, 'width_right', WidthR)</l>
+<c>    * 要显示线条，将显示灰度值下降到线条与背景对比度25%时的点。</c>
+<c>    * 对于抛物线模型，该点的值为sqrt(3/4)。</c>
+<l>    RowR := Row + cos(Angle) * WidthR * sqrt(0.75)</l>
+<l>    ColR := Col + sin(Angle) * WidthR * sqrt(0.75)</l>
+<l>    RowL := Row - cos(Angle) * WidthL * sqrt(0.75)</l>
+<l>    ColL := Col - sin(Angle) * WidthL * sqrt(0.75)</l>
+<l>    dev_set_color ('red')</l>
+<l>    dev_display (Line)</l>
+<l>    dev_set_color ('green')</l>
+<l>    disp_polygon (WindowID, RowL, ColL)</l>
+<l>    disp_polygon (WindowID, RowR, ColR)</l>
+<l>endfor</l>
+</body>
+<docu id="main">
+<parameters/>
+</docu>
+</procedure>
+</hdevelop>
