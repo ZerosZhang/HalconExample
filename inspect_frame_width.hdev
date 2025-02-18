@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hdevelop file_version="1.2" halcon_version="18.11.0.1">
+<procedure name="main">
+<interface/>
+<body>
+<c>* 本程序展示了如何计算两条轮廓线的点间距，以检测手机外壳的摄像头边框。</c>
+<c></c>
+<c>* 它使用运算符 distance_contours_xld 计算边框内轮廓与外轮廓之间的距离，</c>
+<c>* 并使用运算符 segment_contour_attrib_xld 提取缺陷，以便进行可视化处理。</c>
+<c>* 以像素为单位设置允许距离的阈值</c>
+<c></c>
+<c>* 初始化显示参数</c>
+<l>MinWidth := 30</l>
+<l>MaxWidth := 35</l>
+<l>SmoothnessTolerance := .2</l>
+<l>dev_update_off ()</l>
+<l>dev_close_window ()</l>
+<l>read_image (Image, 'plastic_parts/phone_camera_frame_01')</l>
+<l>dev_open_window_fit_image (Image, 0, 0, -1, -1, WindowHandle)</l>
+<l>set_display_font (WindowHandle, 14, 'mono', 'true', 'false')</l>
+<l>Colors := ['white','green','yellow','orange','red']</l>
+<l>Legend := 'Legend:'</l>
+<l>Legend[1] := 'Extracted contours'</l>
+<l>Legend[2] := 'Frame too narrow'</l>
+<l>Legend[3] := 'Frame too wide'</l>
+<l>Legend[4] := 'Contour defect'</l>
+<c></c>
+<c>* 循环处理</c>
+<l>NumImages := 2</l>
+<l>for I := 1 to NumImages by 1</l>
+<l>    read_image (Image, 'plastic_parts/phone_camera_frame_' + I$'02')</l>
+<c>    * 提取相机模组的边缘</c>
+<l>    threshold (Image, Region, 100, 255)</l>
+<l>    dilation_rectangle1 (Region, RegionDilation, 15, 15)</l>
+<l>    reduce_domain (Image, RegionDilation, ImageReduced)</l>
+<l>    edges_sub_pix (ImageReduced, Edges, 'canny', 0.7, 10, 60)</l>
+<l>    union_adjacent_contours_xld (Edges, UnionContours, 7, 7, 'attr_keep')</l>
+<l>    select_shape_xld (UnionContours, SelectedContours, 'contlength', 'and', 700, 99999)</l>
+<c>    * 选择内轮廓和外轮廓</c>
+<l>    length_xld (SelectedContours, Length)</l>
+<l>    tuple_sort_index (Length, Indices)</l>
+<l>    select_obj (SelectedContours, InnerContour, Indices[0] + 1)</l>
+<l>    select_obj (SelectedContours, OuterContour, Indices[3] + 1)</l>
+<c>    * 计算内外轮廓之间的距离，距离将作为输出轮廓的属性存储</c>
+<l>    distance_contours_xld (InnerContour, OuterContour, OuterContourWithWidth, 'point_to_segment')</l>
+<c>    * 获取超出公差范围的轮廓部分</c>
+<l>    segment_contour_attrib_xld (OuterContourWithWidth, OuterContourPartToNarrow, 'distance', 'or', 0, MinWidth)</l>
+<l>    segment_contour_attrib_xld (OuterContourWithWidth, OuterContourPartToWide, 'distance', 'or', MaxWidth, 10000)</l>
+<c>    </c>
+<c>    * 通过比较每条轮廓线和其平滑版本，检查轮廓线是否足够平滑</c>
+<l>    smooth_contours_xld (OuterContour, OuterContourSmooth, 11)</l>
+<l>    smooth_contours_xld (InnerContour, InnerContourSmooth, 11)</l>
+<l>    distance_contours_xld (OuterContour, OuterContourSmooth, OuterContourWithDistance, 'point_to_segment')</l>
+<l>    distance_contours_xld (InnerContour, InnerContourSmooth, InnerContourWithDistance, 'point_to_segment')</l>
+<c>    </c>
+<c>    * 获取超出公差范围的轮廓部分</c>
+<l>    segment_contour_attrib_xld (OuterContourWithDistance, OuterContourDefect, 'distance', 'or', SmoothnessTolerance, 100)</l>
+<l>    segment_contour_attrib_xld (InnerContourWithDistance, InnerContourDefect, 'distance', 'or', SmoothnessTolerance, 100)</l>
+<c></c>
+<c>    * 为调试获取点距</c>
+<l>    get_contour_attrib_xld (OuterContourWithWidth, 'distance', FrameWidth)</l>
+<l>    get_contour_attrib_xld (OuterContourWithDistance, 'distance', InnerDistances)</l>
+<l>    get_contour_attrib_xld (InnerContourWithDistance, 'distance', OuterDistances)</l>
+<c>    * </c>
+<c>    * 显示结果</c>
+<l>    dev_display (Image)</l>
+<l>    disp_message (WindowHandle, 'Inspect frame of phone camera (image ' + I + '/' + NumImages + ')', 'window', 12, 12, 'black', 'true')</l>
+<l>    count_obj (OuterContourPartToNarrow, NumTooNarrow)</l>
+<l>    count_obj (OuterContourPartToWide, NumTooWide)</l>
+<l>    count_obj (OuterContourDefect, NumInnerDefects)</l>
+<l>    count_obj (InnerContourDefect, NumOuterDefects)</l>
+<l>    if (NumTooNarrow + NumTooWide + NumInnerDefects + NumOuterDefects == 0)</l>
+<l>        OK := 1</l>
+<l>        disp_message (WindowHandle, 'Frame OK', 'window', 50, 12, 'forest green', 'true')</l>
+<l>    else</l>
+<l>        OK := 0</l>
+<l>        disp_message (WindowHandle, 'Frame not OK', 'window', 50, 12, 'red', 'true')</l>
+<l>    endif</l>
+<c>    * </c>
+<l>    dev_set_line_width (1)</l>
+<l>    dev_set_color (Colors[1])</l>
+<l>    dev_display (OuterContour)</l>
+<l>    dev_display (InnerContour)</l>
+<l>    dev_set_line_width (5)</l>
+<l>    dev_set_color (Colors[2])</l>
+<l>    dev_display (OuterContourPartToNarrow)</l>
+<l>    dev_set_color (Colors[3])</l>
+<l>    dev_display (OuterContourPartToWide)</l>
+<l>    dev_set_color (Colors[4])</l>
+<l>    dev_display (OuterContourDefect)</l>
+<l>    dev_set_color (Colors[4])</l>
+<l>    dev_display (InnerContourDefect)</l>
+<l>    disp_message (WindowHandle, Legend, 'window', 500, 12, Colors, 'false')</l>
+<l>    if (I &lt; NumImages)</l>
+<l>        disp_continue_message (WindowHandle, 'black', 'true')</l>
+<l>        stop ()</l>
+<l>    endif</l>
+<l>endfor</l>
+</body>
+<docu id="main">
+<parameters/>
+</docu>
+</procedure>
+</hdevelop>
