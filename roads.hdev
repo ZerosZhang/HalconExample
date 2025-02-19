@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hdevelop file_version="1.2" halcon_version="18.11.0.1">
+<procedure name="main">
+<interface/>
+<body>
+<c>* 本例演示了如何从航空图像中提取道路。</c>
+<c>* 在提取道路时，假设一条道路由两条灰度值相同的平行边缘和中间的线段组成。</c>
+<c></c>
+<c>* 首先提取航拍图像中的道路中心。 </c>
+<c>* 然后读取显示第一张航空图像放大部分的第二张图像，</c>
+<c>* 并依次确定第二张图像中的道路边缘轮廓、平行道路边缘轮廓和道路中心轮廓。 </c>
+<c>* 最后，将这些道路假设合并，提取出图像中的道路边线。</c>
+<c></c>
+<l>dev_update_off ()</l>
+<l>dev_close_window ()</l>
+<l>dev_close_window ()</l>
+<c>* </c>
+<c>* 读取航拍图像,在该图片上计算路中心</c>
+<l>read_image (Image, 'mreut4_3')</l>
+<l>dev_open_window_fit_image (Image, 0, 0, -1, -1, WindowHandle1)</l>
+<l>set_display_font (WindowHandle1, 16, 'mono', 'true', 'false')</l>
+<c></c>
+<c>* 提取亮部，道路会比其余部分亮，并在该区域中提取线条</c>
+<l>threshold (Image, Region, 160, 255)</l>
+<l>reduce_domain (Image, Region, ImageReduced)</l>
+<l>MaxLineWidth := 5</l>
+<l>Contrast := 70</l>
+<l>calculate_lines_gauss_parameters (MaxLineWidth, Contrast, Sigma, Low, High)</l>
+<l>lines_gauss (ImageReduced, RoadCenters, Sigma, Low, High, 'light', 'true', 'bar-shaped', 'true')</l>
+<c></c>
+<l>dev_set_color ('red')</l>
+<l>dev_display (Image)</l>
+<l>dev_display (RoadCenters)</l>
+<l>disp_message (WindowHandle1, '提取道路中心', 'window', 12, 12, 'black', 'true')</l>
+<l>disp_continue_message (WindowHandle1, 'black', 'true')</l>
+<l>stop ()</l>
+<c></c>
+<c>* 第二张图片是第一张图片的部分放大，在该图像上计算路的边缘</c>
+<l>read_image (ImagePart, 'mreut_y')</l>
+<l>get_image_size (ImagePart, PartWidth, PartHeight)</l>
+<l>dev_resize_window_fit_image (ImagePart, 0, 0, -1, -1)</l>
+<l>dev_set_part (0, 0, PartWidth - 1, PartHeight - 1)</l>
+<l>dev_set_line_width (2)</l>
+<l>dev_display (ImagePart)</l>
+<l>disp_message (WindowHandle1, '航空图像的放大图像部分', 'window', 12, 12, 'black', 'true')</l>
+<l>disp_continue_message (WindowHandle1, 'black', 'true')</l>
+<l>stop ()</l>
+<c></c>
+<c>* 边缘检测，提取边缘的轮廓线并进行几何近似</c>
+<l>edges_image (ImagePart, PartAmp, PartDir, 'mderiche2', 0.3, 'nms', 20, 40)</l>
+<l>threshold (PartAmp, EdgeRegion, 1, 255)</l>
+<l>clip_region (EdgeRegion, ClippedEdges, 2, 2, PartWidth - 3, PartHeight - 3)</l>
+<l>skeleton (ClippedEdges, EdgeSkeleton)</l>
+<l>gen_contours_skeleton_xld (EdgeSkeleton, EdgeContours, 1, 'filter')</l>
+<l>gen_polygons_xld (EdgeContours, EdgePolygons, 'ramer', 2)</l>
+<c></c>
+<l>dev_set_color ('blue')</l>
+<l>dev_display (ImagePart)</l>
+<l>dev_display (EdgePolygons)</l>
+<l>disp_message (WindowHandle1, '近似后的边缘', 'window', 12, 12, 'blue', 'true')</l>
+<l>disp_continue_message (WindowHandle1, 'black', 'true')</l>
+<l>stop ()</l>
+<c></c>
+<c>* -----------------------------------------------------</c>
+<c>* 提取道路的平行边缘</c>
+<c></c>
+<c>* 通过提取平行的 XLD 多边形确定道路边缘。 </c>
+<c>* 为了排除错误的候选对象，对提取的平行多边形进行进一步修改和扩展。</c>
+<l>gen_parallels_xld (EdgePolygons, ParallelEdges, 10, 30, 0.15, 'true')</l>
+<c>* 修改平行XLD多边形，只获取质量系数大于0.3的XLD多边形（ModParallelRoadEdges）。</c>
+<c>* 然后用相邻的多边形段扩展这些多边形，使其包围一个同质区域（ExtParallelRoadEdges）。</c>
+<l>mod_parallels_xld (ParallelEdges, ImagePart, ModParallelEdges, ExtParallelEdges, 0.3, 160, 220, 10)</l>
+<c>* </c>
+<c>* 显示平行的道路边缘</c>
+<l>dev_set_color ('green')</l>
+<l>dev_display (ModParallelEdges)</l>
+<l>disp_message (WindowHandle1, '道路的平行边缘', 'window', 40, 12, 'forest green', 'true')</l>
+<l>disp_continue_message (WindowHandle1, 'black', 'true')</l>
+<l>stop ()</l>
+<l>dev_set_color ('orange')</l>
+<l>dev_display (ExtParallelEdges)</l>
+<l>disp_message (WindowHandle1, '扩展后的道路的平行边缘', 'window', 40, 12, 'orange', 'true')</l>
+<l>disp_continue_message (WindowHandle1, 'black', 'true')</l>
+<l>stop ()</l>
+<c></c>
+<c>* --------------------------------------------------------</c>
+<c>* 通过仿射变换，将第一张图中提取的道路中心对齐到第二张图像上去，主要是缩放和平移</c>
+<l>hom_mat2d_identity (HomMat2DIdentity)</l>
+<l>hom_mat2d_scale (HomMat2DIdentity, 8, 8, 0, 0, HomMat2DScale)</l>
+<l>hom_mat2d_translate (HomMat2DScale, -250, -600, HomMat2DTranslate)</l>
+<l>affine_trans_contour_xld (RoadCenters, ScaledRoadCenters, HomMat2DTranslate)</l>
+<c>* </c>
+<c>* 裁剪按比例缩放的道路中心轮廓线，然后用多边形对其进行近似处理</c>
+<l>clip_contours_xld (ScaledRoadCenters, ClippedRoadCenters, 0, 0, 512, 512)</l>
+<l>gen_polygons_xld (ClippedRoadCenters, RoadCenterPolygons, 'ramer', 2)</l>
+<c></c>
+<c>* 在第二张图象上显示道路中心</c>
+<l>dev_set_color ('red')</l>
+<l>dev_display (RoadCenterPolygons)</l>
+<l>disp_message (WindowHandle1, '道路中心（由第一张图提取）', 'window', 68, 12, 'red', 'true')</l>
+<l>disp_continue_message (WindowHandle1, 'black', 'true')</l>
+<l>stop ()</l>
+<c></c>
+<c>* --------------------------------------------------------</c>
+<c>* 通过路的中心和平行的边缘，计算实际的道路边</c>
+<l>combine_roads_xld (EdgePolygons, ModParallelEdges, ExtParallelEdges, RoadCenterPolygons, RoadSides, rad(40), rad(20), 40, 40)</l>
+<c></c>
+<l>dev_open_window (0, PartWidth + 10, 512, 512, 'black', WindowHandle2)</l>
+<l>dev_set_part (0, 0, PartWidth - 1, PartHeight - 1)</l>
+<l>set_display_font (WindowHandle2, 16, 'mono', 'true', 'false')</l>
+<l>dev_set_line_width (2)</l>
+<l>dev_set_color ('green')</l>
+<l>dev_display (ImagePart)</l>
+<l>dev_display (RoadSides)</l>
+<l>disp_message (WindowHandle2, '提取的道路边缘\r\n对比左侧的原始轮廓', 'window', 12, 12, 'black', 'true')</l>
+<c></c>
+<l>dev_set_window (WindowHandle1)</l>
+<l>dev_display (ImagePart)</l>
+<l>dev_set_color ('blue')</l>
+<l>dev_display (EdgePolygons)</l>
+<l>dev_set_color ('orange')</l>
+<l>dev_display (ExtParallelEdges)</l>
+<l>dev_set_color ('green')</l>
+<l>dev_display (ModParallelEdges)</l>
+<l>dev_set_color ('red')</l>
+<l>dev_display (RoadCenterPolygons)</l>
+<l>disp_message (WindowHandle1, '图像上提取的边缘', 'window', 10, 12, 'blue', 'true')</l>
+<l>disp_message (WindowHandle1, '扩展的道路平行边缘（橙色+绿色）', 'window', 40, 12, 'orange', 'true')</l>
+<l>disp_message (WindowHandle1, '平行边缘', 'window', 70, 12, 'green', 'true')</l>
+<l>disp_message (WindowHandle1, '道路中心', 'window', 100, 12, 'red', 'true')</l>
+<c></c>
+</body>
+<docu id="main">
+<parameters/>
+</docu>
+</procedure>
+</hdevelop>
