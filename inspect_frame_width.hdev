@@ -36,11 +36,13 @@
 <l>    edges_sub_pix (ImageReduced, Edges, 'canny', 0.7, 10, 60)</l>
 <l>    union_adjacent_contours_xld (Edges, UnionContours, 7, 7, 'attr_keep')</l>
 <l>    select_shape_xld (UnionContours, SelectedContours, 'contlength', 'and', 700, 99999)</l>
+<c>    </c>
 <c>    * 选择内轮廓和外轮廓</c>
 <l>    length_xld (SelectedContours, Length)</l>
 <l>    tuple_sort_index (Length, Indices)</l>
 <l>    select_obj (SelectedContours, InnerContour, Indices[0] + 1)</l>
 <l>    select_obj (SelectedContours, OuterContour, Indices[3] + 1)</l>
+<c>    </c>
 <c>    * 计算内外轮廓之间的距离，距离将作为输出轮廓的属性存储</c>
 <l>    distance_contours_xld (InnerContour, OuterContour, OuterContourWithWidth, 'point_to_segment')</l>
 <c>    * 获取超出公差范围的轮廓部分</c>
@@ -57,11 +59,11 @@
 <l>    segment_contour_attrib_xld (OuterContourWithDistance, OuterContourDefect, 'distance', 'or', SmoothnessTolerance, 100)</l>
 <l>    segment_contour_attrib_xld (InnerContourWithDistance, InnerContourDefect, 'distance', 'or', SmoothnessTolerance, 100)</l>
 <c></c>
-<c>    * 为调试获取点距</c>
+<c>    * 获取轮廓的点距</c>
 <l>    get_contour_attrib_xld (OuterContourWithWidth, 'distance', FrameWidth)</l>
 <l>    get_contour_attrib_xld (OuterContourWithDistance, 'distance', InnerDistances)</l>
 <l>    get_contour_attrib_xld (InnerContourWithDistance, 'distance', OuterDistances)</l>
-<c>    * </c>
+<c>    </c>
 <c>    * 显示结果</c>
 <l>    dev_display (Image)</l>
 <l>    disp_message (WindowHandle, 'Inspect frame of phone camera (image ' + I + '/' + NumImages + ')', 'window', 12, 12, 'black', 'true')</l>
@@ -76,7 +78,7 @@
 <l>        OK := 0</l>
 <l>        disp_message (WindowHandle, 'Frame not OK', 'window', 50, 12, 'red', 'true')</l>
 <l>    endif</l>
-<c>    * </c>
+<c></c>
 <l>    dev_set_line_width (1)</l>
 <l>    dev_set_color (Colors[1])</l>
 <l>    dev_display (OuterContour)</l>
